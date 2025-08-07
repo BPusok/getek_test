@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Font - Gotham */
+@font-face {
+  font-family: 'Gotham';
+  src: url('/fonts/Gotham-Bold.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gotham';
+  src: url('/fonts/Gotham-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gotham';
+  src: url('/fonts/Gotham-Bold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Demo Engineering Design System - Professional Building Engineering Theme
+All colors MUST be HSL. Orange brand color with glassmorphism effects.
+*/
+
+@layer base {
+  :root {
+    /* Base colors - GÉTEK Corporate */
+    --background: 0 0% 98%;
+    --foreground: 240 2% 23%;
+
+    /* Card system with glassmorphism */
+    --card: 0 0% 100%;
+    --card-foreground: 240 2% 23%;
+    --glass: 0 0% 100% / 0.1;
+    --glass-border: 0 0% 100% / 0.2;
+
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 2% 23%;
+
+    /* Brand colors - GÉTEK Corporate */
+    --primary: 9 69% 51%;        /* Corporate narancs #DD3F28 */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 9 80% 60%;
+    --primary-dark: 9 60% 45%;
+
+    /* Secondary - GÉTEK Corporate Blue */
+    --secondary: 201 37% 36%;    /* Corporate kék #3A6A7F */
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted tones */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 2% 23%;
+
+    /* Accent */
+    --accent: 201 37% 95%;
+    --accent-foreground: 240 2% 23%;
+
+    /* Status colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    /* Borders and inputs */
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 9 69% 51%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(9 69% 51%), hsl(9 80% 60%));
+    --gradient-hero: linear-gradient(135deg, hsl(240 10% 10%), hsl(240 6% 20%));
+    --gradient-glass: linear-gradient(135deg, hsl(var(--glass)), hsl(0 0% 100% / 0.05));
+
+    /* Shadows */
+    --shadow-glass: 0 8px 32px hsl(9 69% 51% / 0.1);
+    --shadow-card: 0 4px 12px hsl(240 2% 23% / 0.1);
+    --shadow-primary: 0 4px 20px hsl(9 69% 51% / 0.3);
+
+    /* Spacing and effects */
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 2% 23%;
+    --sidebar-primary: 240 2% 23%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 2% 23%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 201 37% 36%;
+  }
+
+  .dark {
+    /* Dark mode - GÉTEK Corporate Dark */
+    --background: 240 2% 10%;
+    --foreground: 0 0% 95%;
+
+    --card: 240 2% 15%;
+    --card-foreground: 0 0% 95%;
+    --glass: 0 0% 0% / 0.2;
+    --glass-border: 0 0% 100% / 0.1;
+
+    --popover: 240 2% 15%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 9 69% 51%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 9 80% 60%;
+    --primary-dark: 9 60% 45%;
+
+    --secondary: 201 37% 36%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 6% 18%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 240 6% 18%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 240 6% 20%;
+    --input: 240 6% 20%;
+    --ring: 9 69% 51%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(9 69% 51%), hsl(9 80% 60%));
+    --gradient-hero: linear-gradient(135deg, hsl(240 10% 6%), hsl(240 8% 12%));
+    --gradient-glass: linear-gradient(135deg, hsl(var(--glass)), hsl(0 0% 0% / 0.1));
+
+    --shadow-glass: 0 8px 32px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 4px 12px hsl(0 0% 0% / 0.2);
+    --shadow-primary: 0 4px 20px hsl(9 69% 51% / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Gotham', 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Glassmorphism effect utilities */
+  .glass-card {
+    @apply bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl border border-white/10 shadow-lg;
+  }
+
+  .glass-effect {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--shadow-glass);
+  }
+
+  /* Hero text gradient */
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Animation utilities */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  /* Counter animation */
+  .counter-up {
+    animation: counter-up 2s ease-out;
+  }
+
+  @keyframes counter-up {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+}
