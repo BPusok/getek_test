@@ -9,9 +9,28 @@ import {
   Shield,
   Award
 } from "lucide-react";
+import { useState } from "react";
+import PrivacyPolicy from "./PrivacyPolicy";
+import CookiePolicy from "./CookiePolicy";
+import TermsOfService from "./TermsOfService";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showCookiePolicy, setShowCookiePolicy] = useState(false);
+  const [showTermsOfService, setShowTermsOfService] = useState(false);
+
+  if (showPrivacyPolicy) {
+    return <PrivacyPolicy onBack={() => setShowPrivacyPolicy(false)} />;
+  }
+
+  if (showCookiePolicy) {
+    return <CookiePolicy onBack={() => setShowCookiePolicy(false)} />;
+  }
+
+  if (showTermsOfService) {
+    return <TermsOfService onBack={() => setShowTermsOfService(false)} />;
+  }
 
   const services = [
     "Épületgépészeti tervezés",
@@ -22,13 +41,15 @@ const Footer = () => {
     "Speciális épületek"
   ];
 
-  const quickLinks = [
-    { label: "Rólunk", href: "#about" },
-    { label: "Szolgáltatások", href: "#services" },
-    { label: "Projektek", href: "#projects" },
-    { label: "Partnerek", href: "#partners" },
-    { label: "Kapcsolat", href: "#contact" },
-    { label: "Tanácsadás", href: "#contact" }
+  const impressum = [
+    { label: "Cégnév", value: "GÉTEK Mérnöki Szolgáltató Kft." },
+    { label: "Székhely", value: "H-1183 Budapest, Szil utca 5." },
+    { label: "Adószám", value: "32408342-2-43" },
+    { label: "Cégjegyzékszám", value: "01 09 422575" },
+
+    { label: "KSH szám", value: "32408342 7112 113 01" },
+    { label: "Bankszámlaszám", value: "HU97 1040 1024 5052 7089 7552 1008" },
+    { label: "Főtevékenység", value: "7112'25 - Mérnöki tevékenység, műszaki tanácsadás" }
   ];
 
   return (
@@ -44,10 +65,6 @@ const Footer = () => {
               </h3>
               <div className="w-16 h-1 bg-gradient-primary rounded-full"></div>
             </div>
-            <p className="text-gray-300 mb-6 leading-relaxed">
-              Szakmai épületgépészeti tervezés és tanácsadás Budapesten. 
-              14+ év tapasztalat 250+ befejezett projekttel.
-            </p>
             
             {/* Certifications */}
             <div className="space-y-2">
@@ -83,55 +100,25 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Quick Links */}
+          {/* Impresszum */}
           <div>
-            <h4 className="text-lg font-semibold mb-6 text-white">Gyors linkek</h4>
+            <h4 className="text-lg font-semibold mb-6 text-white">Impresszum</h4>
             <ul className="space-y-3">
-              {quickLinks.map((link, index) => (
+              {impressum.map((item, index) => (
                 <li key={index}>
-                  <a 
-                    href={link.href} 
-                    className="text-gray-300 hover:text-primary transition-colors duration-300 text-sm"
-                  >
-                    {link.label}
-                  </a>
+                  <div className="text-sm">
+                    <span className="text-gray-400 font-medium">{item.label}:</span>
+                    <span className="text-gray-300 ml-2">{item.value}</span>
+                  </div>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Social Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-6 text-white">Elérhetőségek</h4>
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Phone className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <p className="text-white font-medium">+36 20 4857309</p>
-                  <p className="text-gray-300 text-sm">Kovács Árpád</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <Mail className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <p className="text-white font-medium">iroda@getek.hu</p>
-                  <p className="text-gray-300 text-sm">Válasz 24 órán belül</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <p className="text-white font-medium">H-1183 Budapest</p>
-                  <p className="text-gray-300 text-sm">Szil utca 5., Magyarország</p>
-                </div>
-              </div>
-            </div>
+            <h4 className="text-lg font-semibold mb-6 text-white">Kövessen minket</h4>
 
-            {/* Social Links */}
-            <div className="mt-6">
-              <h5 className="text-sm font-semibold mb-3 text-white">Kövessen minket</h5>
               <div className="flex space-x-3">
                 <a 
                   href="#" 
@@ -155,7 +142,6 @@ const Footer = () => {
                   <Twitter className="w-4 h-4" />
                 </a>
               </div>
-            </div>
           </div>
         </div>
 
@@ -167,19 +153,24 @@ const Footer = () => {
             </div>
             
             <div className="flex flex-wrap gap-6 text-sm">
-              <a href="#" className="text-gray-300 hover:text-primary transition-colors duration-300">
+              <button 
+                onClick={() => setShowPrivacyPolicy(true)}
+                className="text-gray-300 hover:text-primary transition-colors duration-300"
+              >
                 Adatvédelmi szabályzat
-              </a>
-              <a href="#" className="text-gray-300 hover:text-primary transition-colors duration-300">
+              </button>
+              <button 
+                onClick={() => setShowTermsOfService(true)}
+                className="text-gray-300 hover:text-primary transition-colors duration-300"
+              >
                 Általános szerződési feltételek
-              </a>
-              <a href="#" className="text-gray-300 hover:text-primary transition-colors duration-300">
+              </button>
+              <button 
+                onClick={() => setShowCookiePolicy(true)}
+                className="text-gray-300 hover:text-primary transition-colors duration-300"
+              >
                 Cookie szabályzat
-              </a>
-            </div>
-            
-            <div className="text-gray-300 text-sm">
-              <p>Cégjegyzék: 01 09 422575</p>
+              </button>
             </div>
           </div>
         </div>

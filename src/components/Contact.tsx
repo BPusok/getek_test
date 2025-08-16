@@ -4,10 +4,7 @@ import {
   Phone, 
   Mail, 
   MapPin, 
-  Clock, 
-  Building,
-  FileText,
-  CheckCircle
+  Clock
 } from "lucide-react";
 
 const Contact = () => {
@@ -35,7 +32,7 @@ const Contact = () => {
   ];
 
   return (
-    <section id="contact" className="py-20 bg-gradient-to-br from-secondary to-background">
+    <section id="contact" className="py-20 bg-background">
       <div className="container mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
@@ -68,31 +65,6 @@ const Contact = () => {
                 </Card>
               ))}
             </div>
-
-            {/* Company Information */}
-            <Card className="glass-card p-6">
-              <div className="flex items-start space-x-4 mb-4">
-                <div className="p-3 bg-gradient-primary rounded-lg">
-                  <Building className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-foreground mb-1">Cég Adatok</h3>
-                  <p className="text-muted-foreground text-sm">
-                    GÉTEK Mérnöki Szolgáltató Kft.
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center space-x-2">
-                  <FileText className="w-4 h-4 text-primary" />
-                  <span className="text-muted-foreground">Cégjegyzék: 01 09 422575</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-primary" />
-                  <span className="text-muted-foreground">Adószám: 32408342-2-43</span>
-                </div>
-              </div>
-            </Card>
           </div>
         </div>
       </div>

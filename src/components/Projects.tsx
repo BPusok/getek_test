@@ -24,12 +24,12 @@ const Projects = () => {
     : projects.filter(project => project.category === activeCategory);
 
   return (
-    <section id="projects" className="py-20 bg-gradient-to-br from-background to-secondary">
+    <section id="projects" className="py-20 bg-background">
       <div className="container mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold font-heading mb-6">
-            Referencia <span className="text-gradient">Projektek</span>
+            Referencia <span className="text-gradient">Projektjeink</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Szakértelmünket bizonyítják lakóépületi, ipari és különleges projektjeink
@@ -123,21 +123,6 @@ const Projects = () => {
               </div>
             </Card>
           ))}
-        </div>
-
-        {/* Call to Action */}
-        <div className="text-center mt-16">
-          <div className="glass-effect rounded-2xl p-8 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold mb-4 text-foreground">
-              Készen áll a projektjére?
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              Kérjen ingyenes konzultációt és részletes árajánlatot épületgépészeti igényeihez
-            </p>
-            <Button size="lg" className="bg-primary hover:bg-primary-dark shadow-primary">
-              Ingyenes árajánlat kérése
-            </Button>
-          </div>
         </div>
       </div>
     </section>

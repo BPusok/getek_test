@@ -78,7 +78,7 @@ const Statistics = () => {
   };
 
   return (
-    <section ref={sectionRef} className="py-20 bg-gradient-to-br from-secondary to-background">
+    <section ref={sectionRef} className="py-20 bg-background">
       <div className="container mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-16">
@@ -101,9 +101,6 @@ const Statistics = () => {
                 <h3 className="text-xl font-semibold text-foreground mb-2">
                   {stat.label}
                 </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {stat.description}
-                </p>
               </div>
               
               {/* Animated indicator */}
