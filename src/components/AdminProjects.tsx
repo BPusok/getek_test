@@ -9,8 +9,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Pencil, Trash2, Plus, Save, X, Upload, Image } from "lucide-react";
+import { Pencil, Trash2, Plus, Save, X, Upload, Image, Download, FileUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { optimizeImage, generateThumbnail, getBase64SizeKB } from "@/utils/imageOptimizer";
+import { 
+  saveImageSeparately, 
+  getImageByProjectId, 
+  removeImageByProjectId,
+  saveProjectsWithoutImages,
+  getProjectsWithoutImages,
+  exportProjectsAndImages,
+  importProjectsAndImages,
+  importImagesOnly,
+  getStorageInfo
+} from "@/utils/imageStorage";
 import residentialImage from "@/assets/project-residential.jpg";
 import industrialImage from "@/assets/project-industrial.jpg";
 import healthcareImage from "@/assets/project-healthcare.jpg";
@@ -97,6 +109,8 @@ const AdminProjects = () => {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const projectsImportRef = useRef<HTMLInputElement>(null);
+  const imagesImportRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Check if the access key is correct
@@ -106,25 +120,82 @@ const AdminProjects = () => {
     return <Navigate to="/" replace />;
   }
 
-  // Load projects from localStorage on component mount
+  // Load projects with separate image handling
   useEffect(() => {
-    const savedProjects = localStorage.getItem('getek_projects');
-    if (savedProjects) {
-      try {
-        setProjects(JSON.parse(savedProjects));
-      } catch (error) {
-        console.error('Error parsing saved projects:', error);
+    // Próbáljuk betölteni az új formátumot
+    const projectsWithoutImages = getProjectsWithoutImages();
+    
+    if (projectsWithoutImages.length > 0) {
+      // Új formátum: képek külön tárolva
+      const projectsWithImages = projectsWithoutImages.map(project => {
+        const customImage = getImageByProjectId(project.id);
+        
+        return {
+          id: project.id,
+          title: project.title,
+          category: project.category as "office" | "apartment" | "residential" | "hotel" | "industrial" | "other",
+          description: project.description,
+          features: project.features,
+          location: project.location,
+          year: project.year,
+          image: customImage || getImageForCategory(project.category)
+        } as Project;
+      });
+      
+      setProjects(projectsWithImages);
+    } else {
+      // Régi formátum: migráljuk az új rendszerre
+      const oldSavedProjects = localStorage.getItem('getek_projects');
+      if (oldSavedProjects) {
+        try {
+          const oldProjects = JSON.parse(oldSavedProjects);
+          
+          // Migráljuk a képeket külön tárolásra
+          oldProjects.forEach((project: Project) => {
+            if (project.image && project.image.startsWith('data:')) {
+              saveImageSeparately(project.id, project.image);
+            }
+          });
+          
+          // Mentjük az új formátumban
+          saveProjectsWithoutImages(oldProjects);
+          
+          // Betöltjük az új formátumot
+          const migratedProjects = oldProjects.map((project: Project) => ({
+            ...project,
+            image: project.image && project.image.startsWith('data:') 
+              ? getImageByProjectId(project.id) || project.image
+              : project.image
+          }));
+          
+          setProjects(migratedProjects);
+          
+          // Töröljük a régi formátumot
+          localStorage.removeItem('getek_projects');
+          
+          toast({
+            title: "Adatmigráció",
+            description: "Projektadatok frissítve az új képkezelési rendszerre",
+          });
+          
+        } catch (error) {
+          console.error('Error migrating projects:', error);
+          setProjects(defaultProjects);
+        }
+      } else {
         setProjects(defaultProjects);
       }
-    } else {
-      setProjects(defaultProjects);
     }
   }, []);
 
-  // Save projects to localStorage whenever projects change
+  // Save projects with separate image handling
   useEffect(() => {
     if (projects.length > 0) {
-      localStorage.setItem('getek_projects', JSON.stringify(projects));
+      // Külön mentjük a szöveges adatokat és képeket
+      saveProjectsWithoutImages(projects);
+      
+      // Trigger event to update other components
+      window.dispatchEvent(new Event('projects_updated'));
     }
   }, [projects]);
 
@@ -146,58 +217,9 @@ const AdminProjects = () => {
     }
   };
 
-  // Convert file to base64 for storage
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
 
-  // Optimize image by resizing and compressing
-  const optimizeImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = document.createElement('img');
-      
-      img.onload = () => {
-        // Set max dimensions
-        const maxWidth = 800;
-        const maxHeight = 600;
-        
-        // Calculate new dimensions
-        let { width, height } = img;
-        
-        if (width > maxWidth || height > maxHeight) {
-          const ratio = Math.min(maxWidth / width, maxHeight / height);
-          width *= ratio;
-          height *= ratio;
-        }
-        
-        // Set canvas size
-        canvas.width = width;
-        canvas.height = height;
-        
-        // Draw and compress
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        // Convert to base64 with compression
-        const compressedImage = canvas.toDataURL('image/jpeg', 0.8);
-        resolve(compressedImage);
-        
-        // Clean up
-        URL.revokeObjectURL(img.src);
-      };
-      
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = URL.createObjectURL(file);
-    });
-  };
 
-  // Handle image upload
+  // Handle image upload with advanced optimization
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !editingProject) return;
@@ -205,8 +227,8 @@ const AdminProjects = () => {
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Error",
-        description: "Please select a valid image file",
+        title: "Hiba",
+        description: "Kérjük válasszon érvényes képfájlt",
         variant: "destructive",
       });
       return;
@@ -215,8 +237,8 @@ const AdminProjects = () => {
     // Validate file size (max 10MB for original, will be compressed)
     if (file.size > 10 * 1024 * 1024) {
       toast({
-        title: "Error",
-        description: "Image file must be smaller than 10MB",
+        title: "Hiba",
+        description: "A kép mérete maximum 10MB lehet",
         variant: "destructive",
       });
       return;
@@ -225,25 +247,82 @@ const AdminProjects = () => {
     try {
       setIsUploading(true);
       
-      // Optimize and compress the image
-      const optimizedImage = await optimizeImage(file);
-      
-      setEditingProject({
-        ...editingProject,
-        image: optimizedImage
-      });
-      
-      setImagePreview(optimizedImage);
-      
       toast({
-        title: "Success",
-        description: "Image uploaded and optimized successfully",
+        title: "Kép optimalizálása...",
+        description: "Kérjük várjon, amíg a kép feldolgozásra kerül"
       });
+
+      // Optimize with advanced settings
+      const optimizedImage = await optimizeImage(file, {
+        maxWidth: 800,
+        maxHeight: 600,
+        quality: 0.75,
+        format: 'auto' // WebP if supported, JPEG fallback
+      });
+
+      const sizeKB = getBase64SizeKB(optimizedImage);
+      
+      // If still too large, create a smaller version
+      if (sizeKB > 800) {
+        const smallerImage = await optimizeImage(file, {
+          maxWidth: 600,
+          maxHeight: 400,
+          quality: 0.6,
+          format: 'jpeg'
+        });
+        
+        const smallerSizeKB = getBase64SizeKB(smallerImage);
+        
+        if (smallerSizeKB < sizeKB) {
+          // Mentjük a képet külön
+          saveImageSeparately(editingProject.id, smallerImage);
+          
+          setEditingProject({
+            ...editingProject,
+            image: smallerImage
+          });
+          setImagePreview(smallerImage);
+          
+          toast({
+            title: "Kép sikeresen optimalizálva",
+            description: `Méret: ${smallerSizeKB}KB (nagyobb tömörítéssel) - Külön tárolva`
+          });
+        } else {
+          // Mentjük a képet külön
+          saveImageSeparately(editingProject.id, optimizedImage);
+          
+          setEditingProject({
+            ...editingProject,
+            image: optimizedImage
+          });
+          setImagePreview(optimizedImage);
+          
+          toast({
+            title: "Kép sikeresen feltöltve",
+            description: `Méret: ${sizeKB}KB - Külön tárolva`
+          });
+        }
+      } else {
+        // Mentjük a képet külön
+        saveImageSeparately(editingProject.id, optimizedImage);
+        
+        setEditingProject({
+          ...editingProject,
+          image: optimizedImage
+        });
+        setImagePreview(optimizedImage);
+        
+        toast({
+          title: "Kép sikeresen optimalizálva",
+          description: `Méret: ${sizeKB}KB - Külön tárolva`
+        });
+      }
+      
     } catch (error) {
-      console.error('Image upload error:', error);
+      console.error('Image optimization failed:', error);
       toast({
-        title: "Error",
-        description: "Failed to upload and process image",
+        title: "Kép optimalizálási hiba",
+        description: "A kép feldolgozása nem sikerült. Próbálja másik képpel.",
         variant: "destructive",
       });
     } finally {
@@ -254,6 +333,9 @@ const AdminProjects = () => {
   // Remove uploaded image and use default
   const handleRemoveImage = () => {
     if (!editingProject) return;
+    
+    // Eltávolítjuk a képet a külön tárolásból
+    removeImageByProjectId(editingProject.id);
     
     const defaultImage = getImageForCategory(editingProject.category);
     setEditingProject({
@@ -266,6 +348,11 @@ const AdminProjects = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    
+    toast({
+      title: "Kép eltávolítva",
+      description: "Alapértelmezett kép visszaállítva"
+    });
   };
 
   const handleAddProject = () => {
@@ -285,9 +372,24 @@ const AdminProjects = () => {
   };
 
   const handleEditProject = (project: Project) => {
+    // Betöltjük a projekt adatait
     setEditingProject({ ...project });
-    // Set preview if it's a custom uploaded image (base64)
-    setImagePreview(project.image.startsWith('data:') ? project.image : "");
+    
+    // Külön tárolásból betöltjük a képet ha van
+    const customImage = getImageByProjectId(project.id);
+    
+    if (customImage) {
+      // Van egyedi kép - használjuk azt
+      setEditingProject({ ...project, image: customImage });
+      setImagePreview(customImage);
+    } else if (project.image.startsWith('data:')) {
+      // Régi formátumú base64 kép
+      setImagePreview(project.image);
+    } else {
+      // Nincs egyedi kép
+      setImagePreview("");
+    }
+    
     setIsDialogOpen(true);
   };
 
@@ -297,8 +399,8 @@ const AdminProjects = () => {
     // Validation
     if (!editingProject.title.trim()) {
       toast({
-        title: "Error",
-        description: "Project title is required",
+        title: "Hiba",
+        description: "A projekt címe kötelező",
         variant: "destructive",
       });
       return;
@@ -306,16 +408,17 @@ const AdminProjects = () => {
 
     if (!editingProject.description.trim()) {
       toast({
-        title: "Error", 
-        description: "Project description is required",
+        title: "Hiba", 
+        description: "A projekt leírása kötelező",
         variant: "destructive",
       });
       return;
     }
 
-    // Update image - use uploaded image if available, otherwise use default
+    // A kép már elmentve a handleImageUpload-ban, itt csak a projektet frissítjük
     const finalProject = {
       ...editingProject,
+      // A kép már a külön tárolásban van, ezt megtartjuk
       image: editingProject.image || getImageForCategory(editingProject.category)
     };
 
@@ -328,15 +431,15 @@ const AdminProjects = () => {
       updatedProjects[existingIndex] = finalProject;
       setProjects(updatedProjects);
       toast({
-        title: "Success",
-        description: "Project updated successfully",
+        title: "Sikeres frissítés",
+        description: "Projekt sikeresen frissítve",
       });
     } else {
       // Add new project
       setProjects([...projects, finalProject]);
       toast({
-        title: "Success",
-        description: "Project added successfully",
+        title: "Sikeres hozzáadás",
+        description: "Új projekt sikeresen hozzáadva",
       });
     }
 
@@ -346,10 +449,15 @@ const AdminProjects = () => {
   };
 
   const handleDeleteProject = (id: number) => {
+    // Töröljük a projektet
     setProjects(projects.filter(p => p.id !== id));
+    
+    // Töröljük a hozzá tartozó képet is a külön tárolásból
+    removeImageByProjectId(id);
+    
     toast({
-      title: "Success",
-      description: "Project deleted successfully",
+      title: "Sikeres törlés",
+      description: "Projekt és kapcsolódó kép törölve",
     });
   };
 
@@ -379,12 +487,125 @@ const AdminProjects = () => {
     });
   };
 
+  // Storage information
+  const storageInfo = getStorageInfo();
+  
+  // Export function
+  const handleExportProjects = () => {
+    try {
+      const exportInfo = exportProjectsAndImages();
+      toast({
+        title: "Export sikeres",
+        description: `Projektek: ${exportInfo.projectsSize}KB, Képek: ${exportInfo.imagesSize}KB (${exportInfo.imagesCount} kép)`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export hiba",
+        description: "Nem sikerült exportálni a projekteket",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Import function
+  const handleImportProjects = async (projectsFile: File, imagesFile?: File) => {
+    try {
+      const importInfo = await importProjectsAndImages(projectsFile, imagesFile);
+      
+      // Refresh the component by reloading projects
+      window.location.reload();
+      
+      toast({
+        title: "Import sikeres",
+        description: `${importInfo.projectsCount} projekt és ${importInfo.imagesCount} kép importálva`,
+      });
+    } catch (error) {
+      toast({
+        title: "Import hiba",
+        description: "Nem sikerült importálni a projekteket",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Import button handlers
+  const handleProjectsFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      if (file.type === 'application/json') {
+        await handleImportProjects(file);
+        toast({
+          title: "Projektek importálva",
+          description: "Projektek sikeresen importálva JSON fájlból",
+        });
+      } else {
+        toast({
+          title: "Nem támogatott fájltípus",
+          description: "Csak JSON formátumú projektfájlokat lehet importálni",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Projects import error:', error);
+      toast({
+        title: "Import hiba",
+        description: "Nem sikerült importálni a projekteket. Ellenőrizze a fájl formátumát.",
+        variant: "destructive",
+      });
+    }
+    
+    // Clear the file input
+    e.target.value = '';
+  };
+
+  const handleImagesFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      if (file.type === 'application/json') {
+        // JSON képfájl importálása
+        const imagesCount = await importImagesOnly(file);
+        
+        // Refresh the component by reloading projects
+        window.location.reload();
+        
+        toast({
+          title: "Képek importálva",
+          description: `${imagesCount} kép sikeresen importálva JSON fájlból`,
+        });
+      } else {
+        // Más fájltípusok esetén hiba
+        toast({
+          title: "Nem támogatott fájltípus",
+          description: "Csak JSON formátumú képfájlokat lehet importálni",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Images import error:', error);
+      toast({
+        title: "Import hiba",
+        description: "Nem sikerült importálni a képeket. Ellenőrizze a fájl formátumát.",
+        variant: "destructive",
+      });
+    }
+    
+    // Clear the file input
+    e.target.value = '';
+  };
+
   const resetToDefaults = () => {
     setProjects(defaultProjects);
-    localStorage.setItem('getek_projects', JSON.stringify(defaultProjects));
+    // Töröljük a külön tárolt adatokat is
+    localStorage.removeItem('getek_projects_data');
+    localStorage.removeItem('getek_images');
+    
     toast({
-      title: "Success",
-      description: "Projects reset to defaults",
+      title: "Visszaállítás",
+      description: "Projektek visszaállítva az alapértelmezettre",
     });
   };
 
@@ -395,25 +616,94 @@ const AdminProjects = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold font-heading mb-2">
-              Admin: <span className="text-gradient">Projects Management</span>
+              Admin: <span className="text-gradient">Projektek Kezelése</span>
             </h1>
             <p className="text-muted-foreground">
-              Add, edit, or delete reference projects
+              Referencia projektek hozzáadása, szerkesztése és törlése
             </p>
-            <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-              <span>Total Projects: {projects.length}</span>
-              <span>Custom Images: {projects.filter(p => p.image.startsWith('data:')).length}</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{storageInfo.projects.count}</div>
+                <div className="text-xs text-muted-foreground">Projektek</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{storageInfo.images.count}</div>
+                <div className="text-xs text-muted-foreground">Egyedi Képek</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{storageInfo.projects.sizeKB}KB</div>
+                <div className="text-xs text-muted-foreground">Szöveges Adatok</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">{storageInfo.images.sizeKB}KB</div>
+                <div className="text-xs text-muted-foreground">Képek Mérete</div>
+              </div>
+            </div>
+            <div className="mt-2">
+              <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all ${
+                        storageInfo.localStorage.usedPercentage > 80 ? 'bg-red-500' :
+                        storageInfo.localStorage.usedPercentage > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                      }`}
+                      style={{ width: `${Math.min(storageInfo.localStorage.usedPercentage, 100)}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-muted-foreground">
+                    LocalStorage: {storageInfo.localStorage.usedPercentage}% használt
+                  </span>
+                </div>
+                {storageInfo.images.count > 0 && (
+                  <span className="text-muted-foreground">
+                    | Átlag képméret: {storageInfo.images.avgSizeKB}KB
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
+                <FileUp className="w-4 h-4 mr-2" />
+                Export/Import Útmutató
+              </h4>
+              <div className="text-sm text-blue-700 space-y-1">
+                <p><strong>Export:</strong> 2 fájl letöltődik - projektek JSON és képek JSON</p>
+                <p><strong>Import Projektek:</strong> getek_projects_YYYY-MM-DD.json fájl</p>
+                <p><strong>Import Képek:</strong> getek_images_YYYY-MM-DD.json fájl</p>
+                <p><em>Mindkét fájltípus JSON formátum!</em></p>
+              </div>
             </div>
           </div>
-          <div className="space-x-4">
+          <div className="space-x-2">
             <Button onClick={handleAddProject} className="bg-primary hover:bg-primary-dark">
               <Plus className="w-4 h-4 mr-2" />
-              Add Project
+              Új Projekt
+            </Button>
+            <Button onClick={handleExportProjects} variant="outline" className="border-green-300 text-green-700 hover:bg-green-50">
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+            <Button 
+              onClick={() => projectsImportRef.current?.click()} 
+              variant="outline" 
+              className="border-blue-300 text-blue-700 hover:bg-blue-50"
+            >
+              <FileUp className="w-4 h-4 mr-2" />
+              Import Projektek
+            </Button>
+            <Button 
+              onClick={() => imagesImportRef.current?.click()} 
+              variant="outline" 
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              <Image className="w-4 h-4 mr-2" />
+              Import Képek
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline">
-                  Reset to Defaults
+                <Button variant="outline" className="border-orange-300 text-orange-700 hover:bg-orange-50">
+                  Alapértelmezett
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -746,15 +1036,31 @@ const AdminProjects = () => {
                   fileInputRef.current.value = "";
                 }
               }}>
-                Cancel
+                Mégsem
               </Button>
               <Button onClick={handleSaveProject} disabled={isUploading}>
                 <Save className="w-4 h-4 mr-2" />
-                Save Project
+                Projekt Mentése
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Hidden import file inputs */}
+        <input
+          ref={projectsImportRef}
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          onChange={handleProjectsFileImport}
+        />
+        <input
+          ref={imagesImportRef}
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          onChange={handleImagesFileImport}
+        />
       </div>
     </div>
   );

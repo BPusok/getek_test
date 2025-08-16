@@ -1,8 +1,5 @@
+// src/hooks/use-projects-persistent.ts
 import { useState, useEffect } from "react";
-import { 
-  getProjectsWithoutImages, 
-  getImageByProjectId 
-} from "@/utils/imageStorage";
 
 export interface Project {
   id: number;
@@ -82,83 +79,88 @@ const defaultProjects: Project[] = [
   }
 ];
 
-const getImageForCategory = (category: string) => {
-  switch (category) {
-    case 'office':
-    case 'apartment':
-      return residentialImage;
-    case 'residential':
-      return residentialImage;
-    case 'hotel':
-      return residentialImage;
-    case 'industrial':
-      return industrialImage;
-    case 'other':
-      return healthcareImage;
-    default:
-      return residentialImage;
-  }
-};
-
-export const useProjects = () => {
+export const useProjectsPersistent = () => {
   const [projects, setProjects] = useState<Project[]>([]);
 
-  const loadProjects = () => {
-    const projectsData = getProjectsWithoutImages();
-    
-    if (projectsData.length > 0) {
-      // Új formátum: képek külön tárolva
-      const projectsWithImages = projectsData.map(project => {
-        const customImage = getImageByProjectId(project.id);
-        
-        return {
-          id: project.id,
-          title: project.title,
-          category: project.category as "office" | "apartment" | "residential" | "hotel" | "industrial" | "other",
-          description: project.description,
-          features: project.features,
-          location: project.location,
-          year: project.year,
-          image: customImage || getImageForCategory(project.category)
-        } as Project;
-      });
-      
-      setProjects(projectsWithImages);
-    } else {
-      // Ha nincs új formátumú adat, használjuk az alapértelmezetteket
-      setProjects(defaultProjects);
-    }
-  };
-
-  // Load projects from new separate storage system
+  // Load projects from localStorage on hook initialization
   useEffect(() => {
-    loadProjects();
-
-    // Listen for storage changes from admin panel
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'getek_projects_data' || e.key === 'getek_images') {
-        loadProjects();
+    const savedProjects = localStorage.getItem('getek_projects');
+    if (savedProjects) {
+      try {
+        const parsed = JSON.parse(savedProjects);
+        setProjects(parsed);
+      } catch (error) {
+        console.error('Error parsing saved projects:', error);
+        setProjects(defaultProjects);
+        localStorage.setItem('getek_projects', JSON.stringify(defaultProjects));
       }
-    };
-
-    // Listen for custom events from admin panel
-    const handleProjectsUpdate = () => {
-      loadProjects();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('projects_updated', handleProjectsUpdate);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('projects_updated', handleProjectsUpdate);
-    };
+    } else {
+      setProjects(defaultProjects);
+      localStorage.setItem('getek_projects', JSON.stringify(defaultProjects));
+    }
   }, []);
 
-  // This hook is read-only for the public site
-  // Projects are managed through the admin interface
+  // Save projects to localStorage whenever projects change
+  const saveProjects = (updatedProjects: Project[]) => {
+    setProjects(updatedProjects);
+    localStorage.setItem('getek_projects', JSON.stringify(updatedProjects));
+  };
+
+  // Export projects to JSON file
+  const exportProjects = () => {
+    const dataStr = JSON.stringify(projects, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `getek_projects_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Import projects from JSON file
+  const importProjects = (file: File) => {
+    return new Promise<void>((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const result = e.target?.result as string;
+          const importedProjects: Project[] = JSON.parse(result);
+          
+          // Validate structure
+          if (Array.isArray(importedProjects) && importedProjects.length > 0) {
+            const validProject = importedProjects[0];
+            if (validProject.id && validProject.title && validProject.category) {
+              saveProjects(importedProjects);
+              resolve();
+            } else {
+              reject(new Error('Invalid project structure'));
+            }
+          } else {
+            reject(new Error('No valid projects found'));
+          }
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      reader.onerror = () => reject(new Error('File reading failed'));
+      reader.readAsText(file);
+    });
+  };
+
+  // Reset to defaults
+  const resetToDefaults = () => {
+    saveProjects(defaultProjects);
+  };
+
   return {
     projects,
-    refreshProjects: loadProjects
+    saveProjects,
+    exportProjects,
+    importProjects,
+    resetToDefaults
   };
 };

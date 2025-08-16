@@ -1,0 +1,14 @@
+{
+  "projects": [
+    {
+      "id": 1,
+      "title": "Modern Residential Park",
+      "category": "apartment",
+      "image": "data:image/jpeg;base64,...",
+      "description": "120 lakásos lakótelep teljes HVAC rendszerrel",
+      "features": ["Smart termosztátok", "Energiavisszanyerő szellőztetés", "Padlófűtés"],
+      "location": "Budapest, XIII. kerület",
+      "year": "2023"
+    }
+  ]
+}
