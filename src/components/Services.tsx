@@ -127,20 +127,6 @@ const Services = () => {
           </div>
         </div>
 
-        {/* Emergency Service Banner */}
-        <div className="mt-16 text-center">
-          <div className="glass-effect rounded-2xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold mb-4 text-foreground">
-              Szakmai Tanácsadás és Tervezés
-            </h3>
-            <p className="text-lg text-muted-foreground mb-6">
-              Személyre szabott megoldások minden projekt típushoz - családi háztól az ipari létesítményekig
-            </p>
-            <div className="text-primary text-2xl font-bold">
-              Kapcsolat: +36 20 4857309 | iroda@getek.hu
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

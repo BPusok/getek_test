@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 export interface Project {
   id: number;
   title: string;
-  category: "residential" | "industrial" | "public";
+  category: "office" | "apartment" | "residential" | "hotel" | "industrial" | "other";
   image: string;
   description: string;
   features: string[];
@@ -19,61 +19,61 @@ const defaultProjects: Project[] = [
   {
     id: 1,
     title: "Modern Residential Park",
-    category: "residential",
+    category: "apartment",
     image: residentialImage,
-    description: "120-unit residential complex with complete HVAC installation, smart climate control, and energy-efficient systems.",
-    features: ["Smart thermostats", "Energy recovery ventilation", "Radiant floor heating", "Central cooling"],
-    location: "Budapest, District XIII",
+    description: "120 lakásos lakótelep teljes HVAC rendszerrel, intelligens klímaszabályozással és energiahatékony megoldásokkal.",
+    features: ["Smart termosztátok", "Energiavisszanyerő szellőztetés", "Padlófűtés", "Központi hűtés"],
+    location: "Budapest, XIII. kerület",
     year: "2023"
   },
   {
     id: 2,
-    title: "Automotive Manufacturing Facility",
+    title: "Autógyár Épületgépészeti Rendszerei",
     category: "industrial", 
     image: industrialImage,
-    description: "Complete mechanical systems for automotive factory including production line infrastructure and specialized ventilation.",
-    features: ["Industrial ventilation", "Process cooling", "Compressed air systems", "Paint booth ventilation"],
-    location: "Kecskemét Industrial Park",
+    description: "Komplex gépészeti rendszerek autógyár számára, beleértve a gyártósor infrastruktúráját és speciális szellőztetést.",
+    features: ["Ipari szellőztetés", "Folyamatszabályozó hűtés", "Sűrített levegő rendszer", "Festőkamra szellőztetés"],
+    location: "Kecskeméti Ipari Park",
     year: "2023"
   },
   {
     id: 3,
-    title: "Healthcare Center Renovation",
-    category: "public",
+    title: "Egészségügyi Központ Felújítása",
+    category: "other",
     image: healthcareImage,
-    description: "Hospital infrastructure upgrade with specialized medical gas systems and sterile environment controls.",
-    features: ["Medical gas systems", "Operating room ventilation", "Infection control", "Emergency backup"],
-    location: "Budapest Medical Center",
+    description: "Kórház infrastruktúra korszerűsítése speciális orvosi gázrendszerekkel és steril környezet szabályozással.",
+    features: ["Orvosi gázrendszer", "Műtő szellőztetés", "Fertőzésvédelem", "Vészhelyzeti tartalék"],
+    location: "Budapesti Egészségügyi Központ",
     year: "2022"
   },
   {
     id: 4,
-    title: "Premium Family Houses",
+    title: "Prémium Családi Házak",
     category: "residential",
     image: residentialImage,
-    description: "Luxury residential properties with geothermal heating, smart home integration, and premium HVAC systems.",
-    features: ["Geothermal systems", "Smart home integration", "Pool heating", "Wine cellar climate"],
-    location: "Budakeszi Hills",
+    description: "Luxus családi házak geotermikus fűtéssel, smart home integrációval és prémium HVAC rendszerekkel.",
+    features: ["Geotermikus rendszer", "Smart home integráció", "Medence fűtés", "Borospince klíma"],
+    location: "Budakeszi dombok",
     year: "2022"
   },
   {
     id: 5,
-    title: "Food Processing Plant",
+    title: "Élelmiszeripari Üzem",
     category: "industrial",
     image: industrialImage,
-    description: "Specialized technology pipelines for food manufacturing with strict hygiene and temperature control requirements.",
-    features: ["Sanitary piping", "Temperature control", "Clean room systems", "CIP systems"],
-    location: "Győr Industrial Zone",
+    description: "Speciális technológiai vezetékek élelmiszergyártáshoz, szigorú higiéniai és hőmérséklet-szabályozási követelményekkel.",
+    features: ["Higiénikus vezetékek", "Hőmérséklet-szabályozás", "Tisztatér rendszer", "CIP rendszer"],
+    location: "Győri Ipari Zóna",
     year: "2023"
   },
   {
     id: 6,
-    title: "University Campus Systems",
-    category: "public",
+    title: "Egyetemi Campus Rendszerei",
+    category: "other",
     image: healthcareImage,
-    description: "Comprehensive mechanical systems for educational campus including lecture halls, laboratories, and dormitories.",
-    features: ["Laboratory ventilation", "Lecture hall climate", "Dormitory HVAC", "Energy management"],
-    location: "Budapest Technical University",
+    description: "Komplex gépészeti rendszerek oktatási campushoz, beleértve előadótermeket, laboratóriumokat és kollégiumi épületeket.",
+    features: ["Laboratóriumi szellőztetés", "Előadótermi klíma", "Kollégiumi HVAC", "Energiamenedzsment"],
+    location: "Budapesti Műszaki Egyetem",
     year: "2022"
   }
 ];

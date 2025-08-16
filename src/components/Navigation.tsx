@@ -82,14 +82,14 @@ const Navigation = () => {
               }`}
             >
               <Phone className="w-4 h-4 mr-2" />
-              +36 30 xxx xxxx
+              +36 20 4857309
             </Button>
             <Button 
               size="sm"
               className="bg-primary hover:bg-primary-dark text-white shadow-primary"
               onClick={() => handleNavClick("#contact")}
             >
-              Get Quote
+              Ajánlatkérés
             </Button>
           </div>
 
@@ -130,14 +130,14 @@ const Navigation = () => {
                   className="w-full border-border text-foreground hover:bg-primary hover:text-white"
                 >
                   <Phone className="w-4 h-4 mr-2" />
-                  +36 30 xxx xxxx
+                  +36 20 4857309
                 </Button>
                 <Button 
                   size="sm"
                   className="w-full bg-primary hover:bg-primary-dark text-white"
                   onClick={() => handleNavClick("#contact")}
                 >
-                  Get Quote
+                  Ajánlatkérés
                 </Button>
               </div>
             </div>

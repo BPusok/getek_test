@@ -10,10 +10,13 @@ const Projects = () => {
   const { projects } = useProjects();
 
   const categories = [
-    { id: "all", label: "All Projects" },
-    { id: "residential", label: "Residential" },
-    { id: "industrial", label: "Industrial" },
-    { id: "public", label: "Public" }
+    { id: "all", label: "Összes" },
+    { id: "office", label: "Irodaházak" },
+    { id: "apartment", label: "Társasházak" },
+    { id: "residential", label: "Családi házak" },
+    { id: "hotel", label: "Hotelek" },
+    { id: "industrial", label: "Ipari Csarnokok és Raktárak" },
+    { id: "other", label: "Egyéb különleges építmények" }
   ];
 
   const filteredProjects = activeCategory === "all" 
@@ -26,10 +29,10 @@ const Projects = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold font-heading mb-6">
-            Reference <span className="text-gradient">Projects</span>
+            Referencia <span className="text-gradient">Projektek</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Showcasing our expertise across residential, industrial, and public sector projects
+            Szakértelmünket bizonyítják lakóépületi, ipari és különleges projektjeink
           </p>
 
           {/* Category Filter */}
@@ -70,7 +73,7 @@ const Projects = () => {
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <Button size="sm" className="bg-white text-foreground hover:bg-white/90">
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    View Details
+                    Részletek
                   </Button>
                 </div>
               </div>
@@ -82,8 +85,12 @@ const Projects = () => {
                   <Badge 
                     variant="outline" 
                     className={`${
+                      project.category === 'office' ? 'border-purple-300 text-purple-600' :
+                      project.category === 'apartment' ? 'border-cyan-300 text-cyan-600' :
                       project.category === 'residential' ? 'border-blue-300 text-blue-600' :
+                      project.category === 'hotel' ? 'border-pink-300 text-pink-600' :
                       project.category === 'industrial' ? 'border-orange-300 text-orange-600' :
+                      project.category === 'other' ? 'border-gray-300 text-gray-600' :
                       'border-green-300 text-green-600'
                     }`}
                   >
@@ -97,7 +104,7 @@ const Projects = () => {
 
                 <div className="space-y-3">
                   <div>
-                    <h4 className="font-medium text-foreground mb-2">Key Features:</h4>
+                    <h4 className="font-medium text-foreground mb-2">Főbb jellemzők:</h4>
                     <div className="flex flex-wrap gap-1">
                       {project.features.map((feature, index) => (
                         <Badge key={index} variant="secondary" className="text-xs">
@@ -109,7 +116,7 @@ const Projects = () => {
 
                   <div className="pt-3 border-t border-border">
                     <p className="text-sm text-muted-foreground">
-                      <span className="font-medium">Location:</span> {project.location}
+                      <span className="font-medium">Helyszín:</span> {project.location}
                     </p>
                   </div>
                 </div>
@@ -122,13 +129,13 @@ const Projects = () => {
         <div className="text-center mt-16">
           <div className="glass-effect rounded-2xl p-8 max-w-2xl mx-auto">
             <h3 className="text-2xl font-bold mb-4 text-foreground">
-              Ready to Start Your Project?
+              Készen áll a projektjére?
             </h3>
             <p className="text-muted-foreground mb-6">
-              Get a free consultation and detailed quote for your building engineering needs
+              Kérjen ingyenes konzultációt és részletes árajánlatot épületgépészeti igényeihez
             </p>
             <Button size="lg" className="bg-primary hover:bg-primary-dark shadow-primary">
-              Request Free Quote
+              Ingyenes árajánlat kérése
             </Button>
           </div>
         </div>
